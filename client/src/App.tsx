@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PrivateRoute } from "@/components/PrivateRoute";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Login from "@/pages/Login";
@@ -14,11 +15,11 @@ import Admin from "@/pages/admin";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={(props) => <PrivateRoute component={Home} {...props} />} />
       <Route path="/login" component={Login} />
-      <Route path="/chapter/:id" component={ChapterView} />
-      <Route path="/read/:sectionId" component={SectionReader} />
-      <Route path="/admin" component={Admin} />
+      <Route path="/chapter/:id" component={(props) => <PrivateRoute component={ChapterView} {...props} />} />
+      <Route path="/read/:sectionId" component={(props) => <PrivateRoute component={SectionReader} {...props} />} />
+      <Route path="/admin" component={(props) => <PrivateRoute component={Admin} adminOnly {...props} />} />
       <Route component={NotFound} />
     </Switch>
   );

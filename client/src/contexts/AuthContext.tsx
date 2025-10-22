@@ -29,8 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (e) {
         localStorage.removeItem("kdrama-journal-user");
       }
-    } else {
-      setUser({ id: "guest", username: "Guest", role: "guest" });
     }
   }, []);
 
@@ -56,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    setUser({ id: "guest", username: "Guest", role: "guest" });
+    setUser(null);
     localStorage.removeItem("kdrama-journal-user");
   };
 
@@ -67,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAdmin: user?.role === "admin",
-        isAuthenticated: user?.role !== "guest",
+        isAuthenticated: Boolean(user),
       }}
     >
       {children}

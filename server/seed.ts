@@ -12,6 +12,14 @@ async function seed() {
     });
     console.log("Created admin user:", adminUser.username);
 
+    // Create reader user for testing
+    const readerUser = await storage.createUser({
+      username: "reader",
+      password: "reader123",
+      role: "reader",
+    });
+    console.log("Created reader user:", readerUser.username);
+
     // Create Chapter 1: Spring Destiny
     const chapter1 = await storage.createChapter({
       title: "Spring Destiny",
@@ -133,10 +141,217 @@ The red thread that connected us seemed to glow brighter in the summer twilight.
       pageNumber: 1,
     });
 
+    // Create Chapter 3: Autumn Reflections
+    const chapter3 = await storage.createChapter({
+      title: "Autumn Reflections",
+      description: "The changing seasons mirror the changes in our hearts",
+      order: 3,
+    });
+
+    const section4 = await storage.createSection({
+      chapterId: chapter3.id,
+      title: "Golden Leaves and Memories",
+      mood: "Nostalgic",
+      tags: ["autumn", "reflection", "photography"],
+      order: 1,
+    });
+
+    await storage.createPage({
+      sectionId: section4.id,
+      content: `Autumn arrived quietly in Seoul. The ginkgo trees lining the streets began their transformation into gold, and the air carried a crispness that reminded us of time passing.
+
+We spent that October afternoon in Nami Island, walking among the metasequoia trees. The path was covered in fallen leaves, creating a carpet of amber and gold.
+
+"This is my favorite season," you said, raising your camera to capture the dappled sunlight filtering through the canopy. "Everything is beautiful but temporary. Just like these moments we're capturing."
+
+[embed:https://images.unsplash.com/photo-1541339907-f89f0be0e2ac]
+
+I held your hand tighter, understanding the weight of those words. Our archive was growing, each photo and journal entry a thread in the tapestry of our shared story.`,
+      pageNumber: 1,
+    });
+
+    await storage.createPage({
+      sectionId: section4.id,
+      content: `"Look at this," you said, showing me your camera screen. It was us, reflected in a puddle, surrounded by fallen leaves. "Beautiful imperfection."
+
+We stopped at a café overlooking the river, ordering hot chocolates and watching other couples pose for photos under the autumn trees.
+
+"Remember when we first met?" I asked. "Under the cherry blossoms in spring?"
+
+"How could I forget?" you smiled. "We've been through spring, summer, and now autumn together."
+
+[embed:https://images.unsplash.com/photo-1544251451-6752e8687e4a]
+
+"And we'll see winter together too," I said, adding another page to my journal. The red thread between us felt stronger than ever, woven through the seasons.`,
+      pageNumber: 2,
+    });
+
+    // Create Chapter 4: Winter Warmth
+    const chapter4 = await storage.createChapter({
+      title: "Winter Warmth",
+      description: "Finding warmth in each other during the coldest season",
+      order: 4,
+    });
+
+    const section5 = await storage.createSection({
+      chapterId: chapter4.id,
+      title: "First Snow",
+      mood: "Magical",
+      tags: ["winter", "snow", "romance"],
+      order: 1,
+    });
+
+    await storage.createPage({
+      sectionId: section5.id,
+      content: `They say the first snow of winter is magical in Korea. If you see it with someone special, your love will last forever.
+
+I was at home when you called. "Look outside," you said breathlessly.
+
+I pulled back the curtain to see soft, white flakes drifting down from the dark sky. The streetlights illuminated each snowflake like tiny stars falling to earth.
+
+"I'm coming over," you said. "We need to see this together."
+
+Twenty minutes later, you were at my door, snowflakes caught in your hair, your camera around your neck, and that familiar smile on your face.
+
+"Come on," you said, taking my hand. "Let's catch the first snow."`,
+      pageNumber: 1,
+    });
+
+    await storage.createPage({
+      sectionId: section5.id,
+      content: `We stood in the empty park, faces turned up to the sky, watching the snow fall. You took photos while I described the feeling in words only I could articulate.
+
+"It's like the universe is blessing us," I said softly.
+
+[embed:https://images.unsplash.com/photo-1482164565953-04b62dcac1cd]
+
+"The first snow with you," you whispered, setting down your camera to hold both my hands. "This moment, right now, is everything."
+
+Around us, Seoul was transforming into a winter wonderland. But all I could see was you, the red thread between us glowing brighter in the falling snow.
+
+"Forever," I promised.
+
+"Forever," you echoed.`,
+      pageNumber: 2,
+    });
+
+    const section6 = await storage.createSection({
+      chapterId: chapter4.id,
+      title: "Holiday Market Adventures",
+      mood: "Joyful",
+      tags: ["winter", "market", "celebration"],
+      order: 2,
+    });
+
+    await storage.createPage({
+      sectionId: section6.id,
+      content: `December brought the holiday markets to Seoul. Myeongdong was transformed into a wonderland of lights, street food vendors, and festive music.
+
+We bundled up in matching scarves (your idea, not mine, but I secretly loved it) and dove into the crowds. Your camera was busy capturing everything: the glowing decorations, the steaming tteokbokki stands, children laughing over roasted chestnuts.
+
+"Try this," you said, offering me a cup of hot cinnamon tea. "Perfect for a cold night."
+
+We wandered through the stalls, your hand warm in mine despite the freezing temperature.
+
+[embed:https://images.unsplash.com/photo-1513094735237-8f2714d57c13]
+
+"Look," you pointed to a stall selling red thread bracelets. "Like our red thread of fate."
+
+We bought two matching bracelets, tying them around each other's wrists with promises whispered between the knots.`,
+      pageNumber: 1,
+    });
+
+    await storage.createPage({
+      sectionId: section6.id,
+      content: `As the evening grew later, we found ourselves on a quiet street away from the crowds. The Christmas lights created a magical canopy above us.
+
+"You know what I love most about winter?" you asked, pulling me close.
+
+"What?"
+
+"It gives me an excuse to hold you closer."
+
+I laughed, wrapping my arms around you. "You don't need an excuse."
+
+[embed:https://images.unsplash.com/photo-1512389142860-9c449e58a543]
+
+We took a selfie there, under the lights, our smiles bright and our hearts full. Another entry in our ever-growing archive of love.
+
+"This has been the best year," I said.
+
+"It's only the beginning," you replied. "We have so many more seasons together."
+
+And I believed you, with every fiber of my being.`,
+      pageNumber: 2,
+    });
+
+    // Create Chapter 5: Special Moments
+    const chapter5 = await storage.createChapter({
+      title: "Special Moments",
+      description: "The unforgettable experiences that define our journey",
+      order: 5,
+    });
+
+    const section7 = await storage.createSection({
+      chapterId: chapter5.id,
+      title: "The Rooftop Concert",
+      mood: "Exciting",
+      tags: ["music", "concert", "celebration"],
+      order: 1,
+    });
+
+    await storage.createPage({
+      sectionId: section7.id,
+      content: `You surprised me with tickets to a rooftop concert in Hongdae. I didn't even know how you managed to get them – they were sold out within minutes of release.
+
+"I have my ways," you said with that mischievous smile I'd grown to love.
+
+The venue was intimate, maybe a hundred people maximum, with the Seoul skyline as our backdrop. The indie band played acoustic versions of popular K-drama OSTs, and every song felt like it was written about us.
+
+[embed:https://images.unsplash.com/photo-1514525253161-7a46d19cd819]
+
+"This is incredible," I whispered during a soft ballad, leaning against you.
+
+"I wanted to give you a night you'd never forget," you said, kissing the top of my head.
+
+Mission accomplished.`,
+      pageNumber: 1,
+    });
+
+    await storage.createPage({
+      sectionId: section7.id,
+      content: `As the final song played, the lead singer dedicated it to "all the lovers finding their way to each other tonight."
+
+You stood, offering your hand. "Dance with me?"
+
+Right there, on that rooftop under the stars, we swayed to the music. Other couples joined in, but it felt like we were the only two people in the world.
+
+[embed:https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3]
+
+"Thank you for this," I said.
+
+"Thank you for being exactly who you are," you replied.
+
+The red thread between us pulsed with every heartbeat, binding us tighter with each passing moment.
+
+I knew then that this wasn't just a relationship. This was destiny, written in the stars, sealed by fate, and captured forever in our archive.`,
+      pageNumber: 2,
+    });
+
     console.log("Database seeded successfully!");
-    console.log("\nLogin credentials:");
-    console.log("Username: admin");
-    console.log("Password: admin123");
+    console.log("\n✨ K-Drama Journal is ready to use! ✨");
+    console.log("\n📝 Login credentials:");
+    console.log("\nAdmin Account:");
+    console.log("  Username: admin");
+    console.log("  Password: admin123");
+    console.log("\nReader Account:");
+    console.log("  Username: reader");
+    console.log("  Password: reader123");
+    console.log("\n✅ Sample data includes:");
+    console.log("   • 5 Chapters covering all seasons");
+    console.log("   • 7 Sections with unique moods and themes");
+    console.log("   • Multiple pages with embedded images");
+    console.log("   • K-Drama inspired content and aesthetics");
     
   } catch (error) {
     console.error("Error seeding database:", error);
