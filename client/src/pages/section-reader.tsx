@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { apiRequest } from "@/lib/queryClient";
 import { ThreadBar } from "@/components/ThreadBar";
 import { SectionSidebar } from "@/components/SectionSidebar";
@@ -15,6 +16,7 @@ export default function SectionReader() {
   const { sectionId } = useParams();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { setCurrentSong } = useMusicPlayer();
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -53,6 +55,17 @@ export default function SectionReader() {
       });
     }
   }, [currentPageIndex, currentPage?.id, user?.id]);
+
+  // Load the song when section changes (or clear it if no song)
+  useEffect(() => {
+    if (section) {
+      if (section.songUrl) {
+        setCurrentSong(section.songUrl, section.title);
+      } else {
+        setCurrentSong(null, null);
+      }
+    }
+  }, [section?.id, section?.songUrl, section?.title]);
 
   const handlePrevPage = () => {
     if (currentPageIndex > 0) {

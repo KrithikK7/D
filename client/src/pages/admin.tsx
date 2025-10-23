@@ -5,6 +5,7 @@ import { AdminToolbar } from "@/components/AdminToolbar";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { ReadingContent } from "@/components/ReadingContent";
 import { EmbedPlaceholder } from "@/components/EmbedPlaceholder";
+import { MusicManager } from "@/components/MusicManager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -97,12 +98,15 @@ When our eyes met, it felt like the world stopped for just a moment. The petals 
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-8">
             <TabsTrigger value="content" className="font-noto" data-testid="tab-content">
               Content
             </TabsTrigger>
             <TabsTrigger value="media" className="font-noto" data-testid="tab-media">
               Media
+            </TabsTrigger>
+            <TabsTrigger value="music" className="font-noto" data-testid="tab-music">
+              Music
             </TabsTrigger>
             {isAdmin && (
               <TabsTrigger value="analytics" className="font-noto" data-testid="tab-analytics">
@@ -200,6 +204,10 @@ When our eyes met, it felt like the world stopped for just a moment. The petals 
                 </p>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="music" className="space-y-6">
+            <MusicManager />
           </TabsContent>
 
           {isAdmin && (

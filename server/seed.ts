@@ -25,6 +25,7 @@ async function seed() {
     const chapter1 = await storage.createChapter({
       title: "Spring Destiny",
       description: "The beginning of our story under the cherry blossoms",
+      songUrl: "https://open.spotify.com/track/0JiW8BRZONMh9BwQ4jZGbJ",
       order: 1,
     });
 
@@ -34,6 +35,7 @@ async function seed() {
       title: "Under the Cherry Blossoms",
       mood: "Romantic",
       tags: ["spring", "first-meeting", "destiny"],
+      songUrl: "https://open.spotify.com/track/5K4W6rqBFWDnAN6FQUkS6x",
       order: 1,
     });
 
@@ -42,6 +44,7 @@ async function seed() {
       title: "The Coffee Shop Promise",
       mood: "Hopeful",
       tags: ["cafe", "promise", "beginning"],
+      songUrl: "https://open.spotify.com/track/2FDTHlrBguDzQod7tMcvsp",
       order: 2,
     });
 
@@ -117,6 +120,7 @@ The promise was made. The thread was tied. And our story continued to unfold, on
     const chapter2 = await storage.createChapter({
       title: "Summer Adventures",
       description: "Exploring the city together in the golden summer light",
+      songUrl: "https://open.spotify.com/track/6hOz5sVQXeKgLePPN0LVZP",
       order: 2,
     });
 
@@ -125,6 +129,7 @@ The promise was made. The thread was tied. And our story continued to unfold, on
       title: "Han River Nights",
       mood: "Peaceful",
       tags: ["summer", "han-river", "memories"],
+      songUrl: "https://open.spotify.com/track/5fVZC9GiM4e8vu99W0Xf6J",
       order: 1,
     });
 
@@ -146,6 +151,7 @@ The red thread that connected us seemed to glow brighter in the summer twilight.
     const chapter3 = await storage.createChapter({
       title: "Autumn Reflections",
       description: "The changing seasons mirror the changes in our hearts",
+      songUrl: "https://open.spotify.com/track/0tgVpDi06FyKpA1z0VMD4v",
       order: 3,
     });
 
@@ -154,6 +160,7 @@ The red thread that connected us seemed to glow brighter in the summer twilight.
       title: "Golden Leaves and Memories",
       mood: "Nostalgic",
       tags: ["autumn", "reflection", "photography"],
+      songUrl: "https://open.spotify.com/track/1QY7OuUCxVBZCaNplxEpZg",
       order: 1,
     });
 
@@ -191,6 +198,7 @@ We stopped at a café overlooking the river, ordering hot chocolates and watchin
     const chapter4 = await storage.createChapter({
       title: "Winter Warmth",
       description: "Finding warmth in each other during the coldest season",
+      songUrl: "https://open.spotify.com/track/3RiPr603aXAoi4GHyXx0uy",
       order: 4,
     });
 
@@ -199,6 +207,7 @@ We stopped at a café overlooking the river, ordering hot chocolates and watchin
       title: "First Snow",
       mood: "Magical",
       tags: ["winter", "snow", "romance"],
+      songUrl: "https://open.spotify.com/track/40riOy7x9W7GXjyGp4pjAv",
       order: 1,
     });
 
@@ -241,6 +250,7 @@ Around us, Seoul was transforming into a winter wonderland. But all I could see 
       title: "Holiday Market Adventures",
       mood: "Joyful",
       tags: ["winter", "market", "celebration"],
+      songUrl: "https://open.spotify.com/track/2aJDlirz6v2a4HREki98cP",
       order: 2,
     });
 
@@ -290,6 +300,7 @@ And I believed you, with every fiber of my being.`,
     const chapter5 = await storage.createChapter({
       title: "Special Moments",
       description: "The unforgettable experiences that define our journey",
+      songUrl: "https://open.spotify.com/track/0u2P5u6lvoDfwTYjAADbn4",
       order: 5,
     });
 
@@ -298,6 +309,7 @@ And I believed you, with every fiber of my being.`,
       title: "The Rooftop Concert",
       mood: "Exciting",
       tags: ["music", "concert", "celebration"],
+      songUrl: "https://open.spotify.com/track/5K4W6rqBFWDnAN6FQUkS6x",
       order: 1,
     });
 
@@ -339,6 +351,155 @@ I knew then that this wasn't just a relationship. This was destiny, written in t
       pageNumber: 2,
     });
 
+    // Get all pages for creating analytics and reading progress
+    const section1Pages = await storage.getPagesBySection(section1.id);
+    const section2Pages = await storage.getPagesBySection(section2.id);
+    const section3Pages = await storage.getPagesBySection(section3.id);
+    const section4Pages = await storage.getPagesBySection(section4.id);
+    const section5Pages = await storage.getPagesBySection(section5.id);
+    const section6Pages = await storage.getPagesBySection(section6.id);
+    const section7Pages = await storage.getPagesBySection(section7.id);
+
+    // Create sample analytics events for reader user
+    console.log("Creating sample analytics events...");
+    
+    // Reader viewed section 1 - spent time reading
+    if (section1Pages.length > 0) {
+      await storage.createAnalyticsEvent({
+        userId: readerUser.id,
+        pageId: section1Pages[0].id,
+        sectionId: section1.id,
+        chapterId: chapter1.id,
+        eventType: "page_view",
+        duration: 45000, // 45 seconds
+      });
+      
+      if (section1Pages.length > 1) {
+        await storage.createAnalyticsEvent({
+          userId: readerUser.id,
+          pageId: section1Pages[1].id,
+          sectionId: section1.id,
+          chapterId: chapter1.id,
+          eventType: "page_view",
+          duration: 62000, // 1 minute 2 seconds
+        });
+      }
+    }
+
+    // Reader viewed section 2
+    if (section2Pages.length > 0) {
+      await storage.createAnalyticsEvent({
+        userId: readerUser.id,
+        pageId: section2Pages[0].id,
+        sectionId: section2.id,
+        chapterId: chapter1.id,
+        eventType: "page_view",
+        duration: 38000,
+      });
+    }
+
+    // Reader viewed section 3
+    if (section3Pages.length > 0) {
+      await storage.createAnalyticsEvent({
+        userId: readerUser.id,
+        pageId: section3Pages[0].id,
+        sectionId: section3.id,
+        chapterId: chapter2.id,
+        eventType: "page_view",
+        duration: 55000,
+      });
+    }
+
+    // Admin viewed multiple sections for content review
+    if (section1Pages.length > 0) {
+      await storage.createAnalyticsEvent({
+        userId: adminUser.id,
+        pageId: section1Pages[0].id,
+        sectionId: section1.id,
+        chapterId: chapter1.id,
+        eventType: "page_view",
+        duration: 25000,
+      });
+    }
+
+    if (section4Pages.length > 0) {
+      await storage.createAnalyticsEvent({
+        userId: adminUser.id,
+        pageId: section4Pages[0].id,
+        sectionId: section4.id,
+        chapterId: chapter3.id,
+        eventType: "page_view",
+        duration: 42000,
+      });
+    }
+
+    if (section5Pages.length > 0) {
+      await storage.createAnalyticsEvent({
+        userId: adminUser.id,
+        pageId: section5Pages[0].id,
+        sectionId: section5.id,
+        chapterId: chapter4.id,
+        eventType: "page_view",
+        duration: 51000,
+      });
+    }
+
+    // Create sample reading progress
+    console.log("Creating sample reading progress...");
+    
+    // Reader has completed section 1
+    await storage.upsertReadingProgress({
+      userId: readerUser.id,
+      sectionId: section1.id,
+      pageId: section1Pages[section1Pages.length - 1]?.id,
+      currentPageNumber: section1Pages.length,
+      completed: true,
+    });
+
+    // Reader is in the middle of section 2
+    if (section2Pages.length > 0) {
+      await storage.upsertReadingProgress({
+        userId: readerUser.id,
+        sectionId: section2.id,
+        pageId: section2Pages[0].id,
+        currentPageNumber: 1,
+        completed: false,
+      });
+    }
+
+    // Reader has started section 3
+    if (section3Pages.length > 0) {
+      await storage.upsertReadingProgress({
+        userId: readerUser.id,
+        sectionId: section3.id,
+        pageId: section3Pages[0].id,
+        currentPageNumber: 1,
+        completed: false,
+      });
+    }
+
+    // Admin has reviewed section 4
+    if (section4Pages.length > 0) {
+      await storage.upsertReadingProgress({
+        userId: adminUser.id,
+        sectionId: section4.id,
+        pageId: section4Pages[0].id,
+        currentPageNumber: 1,
+        completed: false,
+      });
+    }
+
+    // Admin has reviewed section 5
+    if (section5Pages.length > 0) {
+      await storage.upsertReadingProgress({
+        userId: adminUser.id,
+        sectionId: section5.id,
+        pageId: section5Pages[0].id,
+        currentPageNumber: 1,
+        completed: false,
+      });
+    }
+
     console.log("Database seeded successfully!");
     console.log("\n✨ K-Drama Journal is ready to use! ✨");
     console.log("\n📝 Login credentials:");
@@ -352,6 +513,9 @@ I knew then that this wasn't just a relationship. This was destiny, written in t
     console.log("   • 5 Chapters covering all seasons");
     console.log("   • 7 Sections with unique moods and themes");
     console.log("   • Multiple pages with embedded images");
+    console.log("   • K-Drama OST Spotify links for chapters and sections");
+    console.log("   • Sample analytics events (7 page views with durations)");
+    console.log("   • Reading progress data for both users");
     console.log("   • K-Drama inspired content and aesthetics");
     
   } catch (error) {

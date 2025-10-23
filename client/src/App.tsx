@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
+import { FloatingMusicPlayer } from "@/components/FloatingMusicPlayer";
 import { PrivateRoute } from "@/components/PrivateRoute";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -29,10 +31,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <MusicPlayerProvider>
+          <TooltipProvider>
+            <Toaster />
+            <FloatingMusicPlayer />
+            <Router />
+          </TooltipProvider>
+        </MusicPlayerProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
