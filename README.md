@@ -1,254 +1,193 @@
 # K-Drama Journal
 
-A colorful, journal-style web application inspired by K-Drama aesthetics, featuring the "Red String of Fate" visual motif. The application enables users to read beautifully formatted journal entries organized into chapters and sections, with reading progress tracking and analytics.
+A full-stack journaling experience inspired by K-Drama aesthetics. This repo contains both the Vite + React client and the Express + Drizzle API so you can run the entire stack with one Node.js process.
 
-## Features
+## Highlights
 
-- 📖 **Beautiful Reading Experience**: Elegantly designed journal entries with K-Drama inspired aesthetics
-- 🎨 **Custom Theming**: Unique color palette featuring sakura pink, lavender, and traditional Korean design elements
-- 📊 **Progress Tracking**: Track your reading progress across chapters and sections
-- 🔐 **Authentication System**: Secure login with role-based access (Admin, Reader)
-- 🖼️ **Embedded Media**: Support for embedded images and Instagram content within journal pages
-- 📱 **Responsive Design**: Works beautifully on desktop and mobile devices
-- 👨‍💼 **Admin Tools**: Content management with inline editing capabilities for admin users
+- 📖 **Immersive reading flow** with chapters, sections, and richly formatted pages seeded with sample stories.
+- 🔐 **Role-based authentication** using bcrypt-hashed passwords and a forthcoming Passport.js integration.
+- 📊 **Reading progress & analytics** tables for tracking engagement across the journal.
+- 🪄 **Design system** powered by Tailwind CSS, shadcn/ui, and Radix UI primitives for polished interactions.
 
-## Tech Stack
+## Tech stack
 
 ### Frontend
-- **React 18** with TypeScript
-- **Vite** for fast development and building
-- **Wouter** for lightweight routing
-- **TanStack Query** for server state management
-- **Radix UI** for accessible component primitives
-- **Tailwind CSS** for styling
-- **Shadcn/ui** component library
+- React 18 + TypeScript (`client/`)
+- TanStack Query, Wouter routing, Radix UI, shadcn/ui
+- Tailwind CSS with custom theming and animation presets
 
 ### Backend
-- **Node.js** with TypeScript
-- **Express.js** for API server
-- **PostgreSQL** database (Neon serverless)
-- **Drizzle ORM** for type-safe database queries
-- **Passport.js** for authentication
+- Express server with modular routing (`server/routes.ts`)
+- Drizzle ORM talking to PostgreSQL (`server/storage.ts` + `shared/schema.ts`)
+- Session-ready foundation using `connect-pg-simple` and bcrypt utilities
+
+### Tooling
+- Vite for client bundling and dev server integration (`server/vite.ts`)
+- Drizzle Kit migrations driven by `drizzle.config.ts`
+- TypeScript project references shared through `tsconfig.json`
+
+## Repository layout
+
+```
+./
+├── client/             # React application (components, hooks, contexts)
+├── server/             # Express API, database layer, seed script
+├── shared/             # Database schema and type exports consumed by both sides
+├── drizzle.config.ts   # Drizzle Kit configuration
+├── package.json        # Combined workspace scripts and dependencies
+└── README.md
+```
+
+Additional documentation lives in [`design_guidelines.md`](design_guidelines.md) and UI tokens under `attached_assets/`.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
-- **Node.js** (version 20 or higher)
-- **npm** (comes with Node.js)
-- **PostgreSQL** database (or access to a Neon database)
+Before running the project locally make sure these are installed:
 
-## Getting Started
+- **Node.js 20+** (ships with npm)
+- **PostgreSQL** instance (Neon is recommended; self-hosted/Postgres-in-Docker works if it allows TLS connections)
+- **git** for cloning the repository
 
-### 1. Clone the Repository
+## 1. Clone and install dependencies
 
 ```bash
 git clone <your-repo-url>
-cd kdrama-journal
-```
-
-### 2. Install Dependencies
-
-```bash
+cd D
 npm install
 ```
 
-This will install all required packages for both the frontend and backend.
+> The repository root is called `D` in this workspace. Adjust the folder name if you cloned it elsewhere.
 
-### 3. Set Up Environment Variables
+## 2. Provision PostgreSQL
 
-Create a `.env` file in the root directory (if not already present) and add your database connection string:
+The backend uses the `@neondatabase/serverless` driver which connects over WebSockets. Any Postgres service that supports TLS and WebSocket proxies (Neon, Supabase, Railway, etc.) will work out of the box.
 
-```env
-DATABASE_URL=postgresql://user:password@host:port/database
+- **Neon (recommended)**
+  1. Create a project and database on https://neon.tech.
+  2. From the Project dashboard, copy the `postgresql://` connection string.
+  3. Append `?sslmode=require` if it is not already present.
+
+- **Local / Docker Postgres**
+  1. Start a TLS-enabled Postgres instance or tunnel it through a proxy that exposes WebSockets.
+  2. Example Docker command:
+     ```bash
+     docker run --name kdrama-postgres \
+       -e POSTGRES_USER=postgres \
+       -e POSTGRES_PASSWORD=postgres \
+       -e POSTGRES_DB=kdrama_journal \
+       -p 5432:5432 -d postgres:16
+     ```
+  3. Expose the database through a tool such as [Postgres.js's `wsproxy`](https://github.com/neondatabase/wsproxy) or adjust `server/db.ts` to use the native `pg` driver if you prefer a direct TCP connection.
+
+Regardless of where you host Postgres, enable the `pgcrypto` extension once so the schema can call `gen_random_uuid()`:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 ```
 
-**For Replit Users:**
-If you're running this on Replit, the database is automatically provisioned and the `DATABASE_URL` environment variable is already set. You can skip this step.
+## 3. Configure environment variables
 
-### 4. Initialize the Database
+Copy the example file and edit it with your credentials:
 
-Push the database schema to your PostgreSQL database:
+```bash
+cp .env.example .env
+```
+
+`.env` expects a single `DATABASE_URL` environment variable. Examples:
+
+```
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kdrama_journal?sslmode=require
+DATABASE_URL=postgresql://<user>:<password>@<your-neon-host>/<database>?sslmode=require
+```
+
+The same variable powers both Drizzle Kit (`drizzle.config.ts`) and the runtime pool in [`server/db.ts`](server/db.ts).
+
+## 4. Push the schema
+
+Create the tables defined in [`shared/schema.ts`](shared/schema.ts) by running:
 
 ```bash
 npm run db:push
 ```
 
-This command uses Drizzle Kit to create all necessary tables in your database.
+Drizzle Kit will read the schema, connect via `DATABASE_URL`, and create/update tables in place. If you see a TLS or connection error double-check that `?sslmode=require` is present in the connection string.
 
-### 5. Seed Sample Data
+## 5. Seed sample content
 
-Populate the database with sample K-Drama journal entries:
+Populate the journal with demo data, admin/reader accounts, and analytics fixtures:
 
 ```bash
 npx tsx server/seed.ts
 ```
 
-This will create:
-- 2 user accounts (admin and reader)
-- 5 chapters covering different seasons
-- 7 sections with various moods and themes
-- Multiple pages with embedded images
-- Beautiful K-Drama inspired content
+The script uses the storage layer in [`server/storage.ts`](server/storage.ts) and bcrypt to hash the default passwords.
 
-### 6. Start the Development Server
+## 6. Run the development server
 
 ```bash
 npm run dev
 ```
 
-The application will start on `http://localhost:5000` (or your Replit URL if using Replit).
+The Express API and Vite client share the same port (defaults to `5000`). Open [http://localhost:5000](http://localhost:5000) to explore the journal.
 
-## Default Login Credentials
+While the server is running you can keep an eye on API traffic through the request logger configured in [`server/index.ts`](server/index.ts).
 
-After seeding the database, you can log in with these accounts:
+## 7. Optional: type-check and build
 
-### Admin Account
-- **Username:** `admin`
-- **Password:** `admin123`
-- **Capabilities:** Full access to content management, analytics, and admin tools
+- `npm run check` — TypeScript project-wide diagnostics
+- `npm run build` — Produces the production bundle in `dist/`
+- `npm start` — Serves the pre-built bundle (sets `NODE_ENV=production`)
 
-### Reader Account
-- **Username:** `reader`
-- **Password:** `reader123`
-- **Capabilities:** Read access to all content with progress tracking
+## Default accounts after seeding
 
-## Project Structure
+| Role   | Username | Password  |
+|--------|----------|-----------|
+| Admin  | `admin`  | `admin123` |
+| Reader | `reader` | `reader123` |
 
-```
-kdrama-journal/
-├── client/                 # Frontend React application
-│   ├── public/            # Static assets
-│   └── src/
-│       ├── components/    # React components
-│       │   ├── ui/       # Reusable UI components
-│       │   └── ...       # Feature-specific components
-│       ├── contexts/      # React context providers
-│       ├── hooks/         # Custom React hooks
-│       ├── lib/          # Utility functions and clients
-│       ├── pages/        # Page components (routes)
-│       └── App.tsx       # Main application component
-├── server/                # Backend Express application
-│   ├── db.ts            # Database connection
-│   ├── index.ts         # Server entry point
-│   ├── routes.ts        # API routes
-│   ├── seed.ts          # Database seeding script
-│   ├── storage.ts       # Data access layer
-│   └── vite.ts          # Vite development middleware
-├── shared/               # Shared code between client and server
-│   └── schema.ts        # Database schema and types
-├── package.json         # Dependencies and scripts
-├── drizzle.config.ts   # Drizzle ORM configuration
-├── vite.config.ts      # Vite configuration
-├── tailwind.config.ts  # Tailwind CSS configuration
-└── tsconfig.json       # TypeScript configuration
-```
+Use the admin account for CRUD routes and the reader for the standard browsing experience.
 
-## Available Scripts
+## API overview
 
-### Development
-- `npm run dev` - Start the development server with hot reload
-- `npm run check` - Run TypeScript type checking
+All routes live in [`server/routes.ts`](server/routes.ts). The most common endpoints are:
 
-### Database
-- `npm run db:push` - Push database schema changes to the database
-- `npx tsx server/seed.ts` - Seed the database with sample data
+| Method & path | Description |
+|---------------|-------------|
+| `POST /api/auth/login` | Authenticate with username/password, returns user profile |
+| `GET /api/chapters` | List chapters ordered by `order` |
+| `POST /api/chapters` | Create a chapter (requires admin role in future Passport flow) |
+| `GET /api/chapters/:chapterId/sections` | Sections within a chapter |
+| `GET /api/sections/:sectionId/pages` | Pages within a section |
+| `POST /api/pages` | Create a page with rich text content |
+| `POST /api/reading-progress` | Upsert reading progress for a user/section pair |
+| `POST /api/analytics` | Record engagement events |
 
-### Production
-- `npm run build` - Build the application for production
-- `npm start` - Start the production server
+Refer to the file for additional update/delete endpoints and error handling specifics.
 
-## Database Schema
+## Database schema
 
-The application uses five main tables:
+The Drizzle schema defines six core tables with array and timestamp columns:
 
-### Users
-- Stores user accounts with role-based access control
-- Roles: `admin`, `reader`, `guest`
+- [`users`](shared/schema.ts) — stores credentials and roles.
+- [`chapters`](shared/schema.ts) — top-level story groupings with optional media URLs.
+- [`sections`](shared/schema.ts) — child records of chapters with mood/tags metadata.
+- [`pages`](shared/schema.ts) — ordered rich-text content connected to sections.
+- [`reading_progress`](shared/schema.ts) — per-user tracking of last read page and completion flag.
+- [`analytics_events`](shared/schema.ts) — captures engagement metrics including duration and timestamps.
 
-### Chapters
-- Top-level content organization
-- Each chapter has a title, description, and order
-
-### Sections
-- Sub-divisions within chapters
-- Contains mood, tags, thumbnail, and order
-
-### Pages
-- Individual content pages within sections
-- Supports embedded content via `[embed:URL]` syntax
-
-### Reading Progress
-- Tracks user reading behavior
-- Records completion status and last read timestamp
-
-## Embedded Content
-
-The application supports embedded content in journal pages using the following syntax:
-
-### Images
-```
-[embed:https://example.com/image.jpg]
-```
-
-### Instagram Reels/Posts
-```
-[embed:https://www.instagram.com/p/POST_ID]
-```
-
-The content renderer will automatically detect and display these embeds appropriately.
-
-## Customization
-
-### Changing Colors
-The color theme is defined in `tailwind.config.ts`. You can customize the K-Drama color palette:
-
-```typescript
-colors: {
-  kdrama: {
-    thread: "#DC143C",
-    sakura: "#FFB7C5",
-    lavender: "#E6E6FA",
-    // ... more colors
-  }
-}
-```
-
-### Adding New Fonts
-Fonts are loaded from Google Fonts in `client/index.html`. The application uses:
-- **Nanum Myeongjo** for headings
-- **Noto Sans KR** for body text
+Every primary key defaults to `gen_random_uuid()` so make sure `pgcrypto` is installed before pushing the schema.
 
 ## Troubleshooting
 
-### Database Connection Issues
-- Ensure your `DATABASE_URL` is correctly set in the environment variables
-- Check that your PostgreSQL database is running and accessible
-- Run `npm run db:push` to ensure the schema is up to date
+- **`DATABASE_URL must be set`** — ensure `.env` exists and that you export the variable when invoking Node (e.g. `source .env` or use a process manager that loads env files).
+- **`gen_random_uuid` does not exist** — enable the `pgcrypto` extension on your database before running migrations or seeding.
+- **Connection hangs or TLS errors** — include `?sslmode=require` and verify that your Postgres instance accepts TLS/WebSocket traffic. For plain local Postgres you can swap in the `pg` driver inside [`server/db.ts`](server/db.ts).
+- **`npm run dev` exits immediately** — the server stops when it fails to reach Postgres; inspect the terminal output for Drizzle connection errors.
 
-### Port Already in Use
-If port 5000 is already in use, you can change it in `server/index.ts`:
-```typescript
-const PORT = process.env.PORT || 5000;
-```
+## Next steps & customization
 
-### Build Errors
-- Clear `node_modules` and reinstall: `rm -rf node_modules && npm install`
-- Clear the build cache: `rm -rf dist`
+- Explore the React UI starting from [`client/src/App.tsx`](client/src/App.tsx).
+- Tailwind theming lives in [`tailwind.config.ts`](tailwind.config.ts) and design tokens in `client/src/index.css`.
+- Add new tables or columns by editing [`shared/schema.ts`](shared/schema.ts) and re-running `npm run db:push`.
 
-## Contributing
-
-This is a personal project, but suggestions and improvements are welcome!
-
-## License
-
-MIT License - See LICENSE file for details
-
-## Acknowledgments
-
-- Inspired by K-Drama aesthetics and the Red String of Fate legend
-- Built with love using modern web technologies
-- Korean typography powered by Google Fonts
-
----
-
-**Enjoy your K-Drama Journal experience! 🎭❤️**
+Enjoy building your own K-Drama inspired journal! 💖
