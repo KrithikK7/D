@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/queryClient";
 import { ThreadBar } from "@/components/ThreadBar";
+import { SectionSidebar } from "@/components/SectionSidebar";
 import type { Section, Page } from "@shared/schema";
 
 export default function SectionReader() {
@@ -15,6 +16,7 @@ export default function SectionReader() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const { data: section } = useQuery<Section>({
     queryKey: [`/api/sections/${sectionId}`],
@@ -25,11 +27,13 @@ export default function SectionReader() {
   });
 
   const saveProgressMutation = useMutation({
-    mutationFn: async (data: { pageId: string; completed: boolean }) => {
+    mutationFn: async (data: { pageId: string; completed: boolean; currentPageNumber: number }) => {
+      if (!user?.id) return;
       return apiRequest("POST", "/api/reading-progress", {
-        userId: user?.role === "guest" ? null : user?.id,
+        userId: user.id,
         sectionId: sectionId!,
         pageId: data.pageId,
+        currentPageNumber: data.currentPageNumber,
         completed: data.completed,
       });
     },
@@ -40,14 +44,15 @@ export default function SectionReader() {
   const progress = totalPages > 0 ? ((currentPageIndex + 1) / totalPages) * 100 : 0;
 
   useEffect(() => {
-    if (currentPage) {
+    if (currentPage && user?.id) {
       const isLastPage = currentPageIndex === totalPages - 1;
       saveProgressMutation.mutate({
         pageId: currentPage.id,
+        currentPageNumber: currentPage.pageNumber,
         completed: isLastPage,
       });
     }
-  }, [currentPageIndex, currentPage?.id]);
+  }, [currentPageIndex, currentPage?.id, user?.id]);
 
   const handlePrevPage = () => {
     if (currentPageIndex > 0) {
@@ -61,13 +66,6 @@ export default function SectionReader() {
     }
   };
 
-  const handleBackToChapter = () => {
-    if (section?.chapterId) {
-      setLocation(`/chapter/${section.chapterId}`);
-    } else {
-      setLocation("/");
-    }
-  };
 
   const renderContent = (content: string) => {
     const embedRegex = /\[embed:([^\]]+)\]/g;
@@ -117,19 +115,20 @@ export default function SectionReader() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-kdrama-sakura/10 via-kdrama-cream/30 to-kdrama-lavender/10">
-      <ThreadBar progress={progress} />
+      {section?.chapterId && (
+        <SectionSidebar
+          chapterId={section.chapterId}
+          currentSectionId={sectionId!}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+      )}
 
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="mb-8 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleBackToChapter}
-            data-testid="button-back-chapter"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1">
+      <div className={`transition-all duration-300 ${sidebarOpen ? "lg:ml-80" : "lg:ml-16"}`}>
+        <ThreadBar progress={progress} />
+
+        <div className="container mx-auto px-4 py-12 max-w-4xl">
+          <div className="mb-8">
             <h1 className="font-myeongjo text-3xl md:text-4xl text-kdrama-ink">
               {section?.title || "Loading..."}
             </h1>
@@ -148,7 +147,6 @@ export default function SectionReader() {
               </div>
             )}
           </div>
-        </div>
 
         <Card className="p-8 md:p-12 bg-white/80 backdrop-blur-sm border-0 shadow-md">
           <div className="prose prose-lg max-w-none font-noto">
@@ -189,6 +187,7 @@ export default function SectionReader() {
             </Button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

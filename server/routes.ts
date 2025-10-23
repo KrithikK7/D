@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
-import { insertUserSchema, insertChapterSchema, insertSectionSchema, insertPageSchema, insertReadingProgressSchema } from "@shared/schema";
+import { insertUserSchema, insertChapterSchema, insertSectionSchema, insertPageSchema, insertReadingProgressSchema, insertAnalyticsEventSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -15,7 +16,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = await storage.getUserByUsername(username);
       
-      if (!user || user.password !== password) {
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      
+      if (!passwordMatch) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
@@ -207,8 +214,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reading progress routes
   app.get("/api/reading-progress", async (req, res) => {
     try {
-      const userId = req.query.userId as string | undefined;
-      const progress = await storage.getUserReadingProgress(userId || null);
+      const userId = req.query.userId as string;
+      if (!userId) {
+        return res.status(400).json({ error: "User ID required" });
+      }
+      const progress = await storage.getUserReadingProgress(userId);
       res.json(progress);
     } catch (error) {
       console.error("Get reading progress error:", error);
@@ -218,8 +228,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/reading-progress/last", async (req, res) => {
     try {
-      const userId = req.query.userId as string | undefined;
-      const progress = await storage.getLastReadSection(userId || null);
+      const userId = req.query.userId as string;
+      if (!userId) {
+        return res.status(400).json({ error: "User ID required" });
+      }
+      const progress = await storage.getLastReadSection(userId);
       res.json(progress || null);
     } catch (error) {
       console.error("Get last read error:", error);
@@ -235,6 +248,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Save reading progress error:", error);
       res.status(400).json({ error: "Invalid progress data" });
+    }
+  });
+
+  // Analytics routes
+  app.post("/api/analytics", async (req, res) => {
+    try {
+      const validatedData = insertAnalyticsEventSchema.parse(req.body);
+      const event = await storage.createAnalyticsEvent(validatedData);
+      res.status(201).json(event);
+    } catch (error) {
+      console.error("Create analytics event error:", error);
+      res.status(400).json({ error: "Invalid analytics data" });
+    }
+  });
+
+  app.get("/api/analytics/summary", async (req, res) => {
+    try {
+      const summary = await storage.getAnalyticsSummary();
+      res.json(summary);
+    } catch (error) {
+      console.error("Get analytics summary error:", error);
+      res.status(500).json({ error: "Failed to fetch analytics summary" });
+    }
+  });
+
+  app.get("/api/analytics/user/:userId", async (req, res) => {
+    try {
+      const events = await storage.getAnalyticsByUser(req.params.userId);
+      res.json(events);
+    } catch (error) {
+      console.error("Get user analytics error:", error);
+      res.status(500).json({ error: "Failed to fetch user analytics" });
+    }
+  });
+
+  app.get("/api/analytics/chapter/:chapterId", async (req, res) => {
+    try {
+      const events = await storage.getAnalyticsByChapter(req.params.chapterId);
+      res.json(events);
+    } catch (error) {
+      console.error("Get chapter analytics error:", error);
+      res.status(500).json({ error: "Failed to fetch chapter analytics" });
     }
   });
 

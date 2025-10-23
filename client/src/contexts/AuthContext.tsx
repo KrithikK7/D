@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type UserRole = "admin" | "reader" | "guest";
+export type UserRole = "admin" | "reader";
 
 interface AuthUser {
   id: string;

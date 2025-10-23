@@ -9,14 +9,17 @@ import {
   type InsertPage,
   type ReadingProgress,
   type InsertReadingProgress,
+  type AnalyticsEvent,
+  type InsertAnalyticsEvent,
   users,
   chapters,
   sections,
   pages,
   readingProgress,
+  analyticsEvents,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc, isNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -46,10 +49,19 @@ export interface IStorage {
   deletePage(id: string): Promise<void>;
   
   // Reading progress methods
-  getReadingProgress(userId: string | null, sectionId: string): Promise<ReadingProgress | undefined>;
-  getUserReadingProgress(userId: string | null): Promise<ReadingProgress[]>;
+  getReadingProgress(userId: string, sectionId: string): Promise<ReadingProgress | undefined>;
+  getUserReadingProgress(userId: string): Promise<ReadingProgress[]>;
   upsertReadingProgress(progress: InsertReadingProgress): Promise<ReadingProgress>;
-  getLastReadSection(userId: string | null): Promise<ReadingProgress | undefined>;
+  getLastReadSection(userId: string): Promise<ReadingProgress | undefined>;
+  
+  // Analytics methods
+  createAnalyticsEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent>;
+  getAnalyticsByUser(userId: string): Promise<AnalyticsEvent[]>;
+  getAnalyticsByPage(pageId: string): Promise<AnalyticsEvent[]>;
+  getAnalyticsBySection(sectionId: string): Promise<AnalyticsEvent[]>;
+  getAnalyticsByChapter(chapterId: string): Promise<AnalyticsEvent[]>;
+  getAllAnalytics(): Promise<AnalyticsEvent[]>;
+  getAnalyticsSummary(): Promise<any>;
 }
 
 export class DBStorage implements IStorage {
@@ -142,22 +154,20 @@ export class DBStorage implements IStorage {
   }
 
   // Reading progress methods
-  async getReadingProgress(userId: string | null, sectionId: string): Promise<ReadingProgress | undefined> {
-    const condition = userId 
-      ? and(eq(readingProgress.userId, userId), eq(readingProgress.sectionId, sectionId))
-      : and(isNull(readingProgress.userId), eq(readingProgress.sectionId, sectionId));
-    
-    const result = await db.select().from(readingProgress).where(condition).limit(1);
+  async getReadingProgress(userId: string, sectionId: string): Promise<ReadingProgress | undefined> {
+    const result = await db.select()
+      .from(readingProgress)
+      .where(and(eq(readingProgress.userId, userId), eq(readingProgress.sectionId, sectionId)))
+      .limit(1);
     return result[0];
   }
 
-  async getUserReadingProgress(userId: string | null): Promise<ReadingProgress[]> {
-    const condition = userId ? eq(readingProgress.userId, userId) : isNull(readingProgress.userId);
-    return db.select().from(readingProgress).where(condition).orderBy(desc(readingProgress.lastReadAt));
+  async getUserReadingProgress(userId: string): Promise<ReadingProgress[]> {
+    return db.select().from(readingProgress).where(eq(readingProgress.userId, userId)).orderBy(desc(readingProgress.lastReadAt));
   }
 
   async upsertReadingProgress(progress: InsertReadingProgress): Promise<ReadingProgress> {
-    const existing = await this.getReadingProgress(progress.userId || null, progress.sectionId);
+    const existing = await this.getReadingProgress(progress.userId, progress.sectionId);
     
     if (existing) {
       const result = await db
@@ -172,15 +182,63 @@ export class DBStorage implements IStorage {
     }
   }
 
-  async getLastReadSection(userId: string | null): Promise<ReadingProgress | undefined> {
-    const condition = userId ? eq(readingProgress.userId, userId) : isNull(readingProgress.userId);
+  async getLastReadSection(userId: string): Promise<ReadingProgress | undefined> {
     const result = await db
       .select()
       .from(readingProgress)
-      .where(condition)
+      .where(eq(readingProgress.userId, userId))
       .orderBy(desc(readingProgress.lastReadAt))
       .limit(1);
     return result[0];
+  }
+
+  // Analytics methods
+  async createAnalyticsEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent> {
+    const result = await db.insert(analyticsEvents).values(event).returning();
+    return result[0];
+  }
+
+  async getAnalyticsByUser(userId: string): Promise<AnalyticsEvent[]> {
+    return db.select().from(analyticsEvents).where(eq(analyticsEvents.userId, userId)).orderBy(desc(analyticsEvents.timestamp));
+  }
+
+  async getAnalyticsByPage(pageId: string): Promise<AnalyticsEvent[]> {
+    return db.select().from(analyticsEvents).where(eq(analyticsEvents.pageId, pageId)).orderBy(desc(analyticsEvents.timestamp));
+  }
+
+  async getAnalyticsBySection(sectionId: string): Promise<AnalyticsEvent[]> {
+    return db.select().from(analyticsEvents).where(eq(analyticsEvents.sectionId, sectionId)).orderBy(desc(analyticsEvents.timestamp));
+  }
+
+  async getAnalyticsByChapter(chapterId: string): Promise<AnalyticsEvent[]> {
+    return db.select().from(analyticsEvents).where(eq(analyticsEvents.chapterId, chapterId)).orderBy(desc(analyticsEvents.timestamp));
+  }
+
+  async getAllAnalytics(): Promise<AnalyticsEvent[]> {
+    return db.select().from(analyticsEvents).orderBy(desc(analyticsEvents.timestamp));
+  }
+
+  async getAnalyticsSummary(): Promise<any> {
+    const result = await db.execute(sql`
+      SELECT 
+        ae.page_id,
+        ae.section_id,
+        ae.chapter_id,
+        p.page_number,
+        s.title as section_title,
+        c.title as chapter_title,
+        COUNT(DISTINCT ae.user_id) as unique_viewers,
+        COUNT(*) as total_views,
+        AVG(ae.duration) as avg_duration,
+        MAX(ae.timestamp) as last_accessed
+      FROM analytics_events ae
+      JOIN pages p ON ae.page_id = p.id
+      JOIN sections s ON ae.section_id = s.id
+      JOIN chapters c ON ae.chapter_id = c.id
+      GROUP BY ae.page_id, ae.section_id, ae.chapter_id, p.page_number, s.title, c.title
+      ORDER BY total_views DESC
+    `);
+    return result.rows;
   }
 }
 

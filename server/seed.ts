@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 
 async function seed() {
@@ -7,7 +8,7 @@ async function seed() {
     // Create admin user
     const adminUser = await storage.createUser({
       username: "admin",
-      password: "admin123",
+      password: await bcrypt.hash("admin123", 10),
       role: "admin",
     });
     console.log("Created admin user:", adminUser.username);
@@ -15,7 +16,7 @@ async function seed() {
     // Create reader user for testing
     const readerUser = await storage.createUser({
       username: "reader",
-      password: "reader123",
+      password: await bcrypt.hash("reader123", 10),
       role: "reader",
     });
     console.log("Created reader user:", readerUser.username);

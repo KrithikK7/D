@@ -39,10 +39,6 @@ export default function Login() {
     setIsLoading(false);
   };
 
-  const handleGuestAccess = () => {
-    setLocation("/");
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-kdrama-sakura/20 via-kdrama-lavender/20 to-kdrama-sky/20 p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -106,26 +102,8 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-kdrama-thread/20"></span>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground font-noto">Or</span>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full font-noto"
-            onClick={handleGuestAccess}
-            data-testid="button-guest"
-          >
-            Continue as Guest
-          </Button>
-
           <p className="text-xs text-center text-muted-foreground font-noto">
-            Guests can read all content. Admin access required for editing.
+            Please login to access the journal. Contact admin for account access.
           </p>
         </CardContent>
       </Card>

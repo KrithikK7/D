@@ -22,6 +22,7 @@ export const chapters = pgTable("chapters", {
   title: text("title").notNull(),
   description: text("description"),
   coverImage: text("cover_image"),
+  songUrl: text("song_url"),
   order: integer("order").notNull(),
 });
 
@@ -39,6 +40,7 @@ export const sections = pgTable("sections", {
   mood: text("mood"),
   tags: text("tags").array(),
   thumbnail: text("thumbnail"),
+  songUrl: text("song_url"),
   order: integer("order").notNull(),
 });
 
@@ -65,9 +67,10 @@ export type Page = typeof pages.$inferSelect;
 
 export const readingProgress = pgTable("reading_progress", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   sectionId: varchar("section_id").notNull().references(() => sections.id, { onDelete: "cascade" }),
   pageId: varchar("page_id").references(() => pages.id, { onDelete: "cascade" }),
+  currentPageNumber: integer("current_page_number").default(1),
   completed: boolean("completed").notNull().default(false),
   lastReadAt: timestamp("last_read_at").notNull().defaultNow(),
 });
@@ -79,3 +82,22 @@ export const insertReadingProgressSchema = createInsertSchema(readingProgress).o
 
 export type InsertReadingProgress = z.infer<typeof insertReadingProgressSchema>;
 export type ReadingProgress = typeof readingProgress.$inferSelect;
+
+export const analyticsEvents = pgTable("analytics_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  pageId: varchar("page_id").notNull().references(() => pages.id, { onDelete: "cascade" }),
+  sectionId: varchar("section_id").notNull().references(() => sections.id, { onDelete: "cascade" }),
+  chapterId: varchar("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(),
+  duration: integer("duration"),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+});
+
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
