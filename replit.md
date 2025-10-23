@@ -54,9 +54,11 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 
-**Database**: PostgreSQL accessed through Neon serverless driver
+**Database**: PostgreSQL accessed through standard `pg` driver with Neon backend
 
 **ORM**: Drizzle ORM for type-safe database queries and schema management
+- Uses `drizzle-orm/node-postgres` adapter for optimal Replit compatibility
+- Connection pool configured for serverless auto-sleep/wake behavior
 
 **Schema Design**:
 - `users` - User accounts with role-based access (admin/reader/guest)
@@ -80,8 +82,9 @@ Preferred communication style: Simple, everyday language.
 
 ### External Dependencies
 
-**Database Service**: Neon PostgreSQL serverless database
-- WebSocket-based connection pooling
+**Database Service**: Neon PostgreSQL database via standard `pg` driver
+- Standard PostgreSQL connection with TLS verification enforced
+- Connection pooling with min: 0, max: 80 for optimal performance
 - Connection string via `DATABASE_URL` environment variable
 
 **UI Libraries**:
